@@ -23,7 +23,6 @@
   "dependencies": {
     "@google/genai": "^1.0.1",
     "@payloadcms/db-mongodb": "3.39.1",
-    "@payloadcms/db-postgres": "3.39.1",
     "@payloadcms/email-nodemailer": "3.39.1",
     "@payloadcms/graphql": "3.39.1",
     "@payloadcms/live-preview-react": "3.39.1",
