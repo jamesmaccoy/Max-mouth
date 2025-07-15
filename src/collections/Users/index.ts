@@ -12,7 +12,7 @@ export const Users: CollectionConfig = {
     update: authenticated,
   },
   admin: {
-    defaultColumns: ['name', 'email'],
+    defaultColumns: ['name', 'email', 'role'],
     useAsTitle: 'name',
   },
   auth: true,
@@ -20,6 +20,32 @@ export const Users: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
+    },
+    {
+      name: 'role',
+      type: 'select',
+      hasMany: true,
+      options: [
+        {
+          label: 'Admin',
+          value: 'admin',
+        },
+        {
+          label: 'Host',
+          value: 'host',
+        },
+        {
+          label: 'Customer',
+          value: 'customer',
+        },
+      ],
+      defaultValue: ['customer'],
+      access: {
+        // Only admins can modify roles
+        update: ({ req: { user } }) => {
+          return Boolean((user as any)?.role?.includes('admin'))
+        },
+      },
     },
   ],
   timestamps: true,
