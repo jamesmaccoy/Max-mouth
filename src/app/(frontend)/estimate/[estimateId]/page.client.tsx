@@ -110,9 +110,6 @@ export default function EstimateDetailsClientPage({ data, user }: Props) {
   const _postId = typeof data?.post === 'object' && data?.post?.id ? data.post.id : ''
   const { packages, loading, error } = usePackages(_postId)
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   // Payment states
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)

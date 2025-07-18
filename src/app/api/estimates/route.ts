@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         name: { equals: packageType },
         isEnabled: { equals: true }
       },
-      limit: 1,
+        limit: 1,
     })
     console.log('Package query result:', packageResult.docs);
     if (!packageResult.docs.length) {
@@ -69,17 +69,17 @@ export async function POST(request: NextRequest) {
     } else {
       // Create
       estimate = await payload.create({
-        collection: 'estimates',
-        data: {
+      collection: 'estimates',
+      data: {
           title: title || `Estimate for ${postId}`,
           post: postId,
-          fromDate,
-          toDate,
-          guests,
+        fromDate,
+        toDate,
+        guests,
           total: calculatedTotal,
           customer: user.id,
-          packageType,
-        },
+        packageType,
+      },
         user: user.id
       })
     }
