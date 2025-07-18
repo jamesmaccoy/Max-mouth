@@ -1,114 +1,92 @@
-// src/pages/api/estimates.ts (or /app/api/estimates/route.ts for app router)
+import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
-import { calculateTotal } from '@/lib/calculateTotal'
+// import { createEstimate, updateEstimate } from '@/server/payload/estimates' // If you have these utilities
+import type { Estimate } from '@/payload-types'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { postId, fromDate, toDate, guests, title, customer, packageType } = body;
-    // You may want to get the user from the session/auth
-
-    const payload = await getPayload({ config: configPromise });
-
-    let postRef = postId;
-    let baseRate = 150;
-    let multiplier = 1;
-
-    // If postId is not a valid ObjectId, look up the post by slug
-    if (!/^[a-f\d]{24}$/i.test(postId)) {
-      const post = await payload.find({
-        collection: 'posts',
-        where: { slug: { equals: postId } },
-        limit: 1,
-      });
-      if (!post.docs.length) {
-        return new Response(JSON.stringify({ error: 'Post not found' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-      }
-      postRef = post.docs[0]?.id;
-      baseRate = typeof post.docs[0]?.baseRate === 'number' ? post.docs[0]?.baseRate : 150;
-    } else {
-      // If postId is an ObjectId, fetch the post to get baseRate
-      const post = await payload.findByID({ collection: 'posts', id: postId });
-      if (post && typeof post.baseRate === 'number') {
-        baseRate = post.baseRate;
-      }
+    const payload = await getPayload({ config: configPromise })
+    const { user } = await payload.auth({ headers: request.headers })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Calculate duration
-    let duration = 1;
-    if (fromDate && toDate) {
-      const start = new Date(fromDate);
-      const end = new Date(toDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 0) duration = diffDays;
+    const body = await request.json()
+    const { postId, fromDate, toDate, guests, title, packageType, total } = body
+
+    // Fetch the package config for this post and packageType
+    console.log('Looking for package:', { postId, packageType });
+    const packageResult = await payload.find({
+      collection: 'packages',
+      where: {
+        post: { equals: postId },
+        name: { equals: packageType },
+        isEnabled: { equals: true }
+      },
+      limit: 1,
+    })
+    console.log('Package query result:', packageResult.docs);
+    if (!packageResult.docs.length) {
+      return NextResponse.json({ error: 'Package not found' }, { status: 400 })
     }
+    const pkg = packageResult.docs[0]
+    const multiplier = typeof pkg.multiplier === 'number' ? pkg.multiplier : 1
+    const baseRate = typeof pkg.baseRate === 'number' ? pkg.baseRate : 150
+    const duration = fromDate && toDate
+      ? Math.max(1, Math.ceil((new Date(toDate).getTime() - new Date(fromDate).getTime()) / (1000 * 60 * 60 * 24)))
+      : 1
+    const calculatedTotal = total !== undefined ? Number(total) : baseRate * duration * multiplier
 
-    // Determine multiplier based on packageType
-    if (packageType === 'wine') {
-      multiplier = 1.5;
-    } else {
-      multiplier = 1;
-    }
-
-    const total = calculateTotal(baseRate, duration, multiplier);
-
-    // Ensure customer is just the ID
-    const customerId = typeof customer === 'object' && customer !== null ? customer.id : customer;
-
-    // Check for existing estimate for this post/customer/dates
+    // Check for existing estimate
     const existing = await payload.find({
       collection: 'estimates',
       where: {
-        post: { equals: postRef },
-        customer: { equals: customerId },
+        post: { equals: postId },
+        customer: { equals: user.id },
         fromDate: { equals: fromDate },
         toDate: { equals: toDate }
       },
       limit: 1,
-    });
+    })
+
+    let estimate: Estimate
     if (existing.docs.length) {
-      // Update the existing estimate with the new total and other fields
-      const updated = await payload.update({
+      // Update
+      estimate = await payload.update({
         collection: 'estimates',
-        id: existing.docs[0]!.id,
+        id: existing.docs[0].id,
         data: {
-          total,
+          total: calculatedTotal,
           guests,
           fromDate,
           toDate,
-          customer: customerId, // <-- just the ID
+          customer: user.id,
           packageType,
         },
-      });
-      return new Response(JSON.stringify(updated), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+        user: user.id
+      })
+    } else {
+      // Create
+      estimate = await payload.create({
+        collection: 'estimates',
+        data: {
+          title: title || `Estimate for ${postId}`,
+          post: postId,
+          fromDate,
+          toDate,
+          guests,
+          total: calculatedTotal,
+          customer: user.id,
+          packageType,
+        },
+        user: user.id
+      })
     }
 
-    // Create new estimate
-    const estimate = await payload.create({
-      collection: 'estimates',
-      data: {
-        title: title || `Estimate for ${postRef}`,
-        post: postRef,
-        fromDate,
-        toDate,
-        guests,
-        total,
-        customer: customerId, // <-- just the ID
-        packageType,
-      },
-    });
-
-    return new Response(JSON.stringify(estimate), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(estimate, { status: existing.docs.length ? 200 : 201 })
   } catch (err) {
     console.error(err)
-    return new Response(JSON.stringify({ error: (err instanceof Error ? err.message : 'Unknown error') }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    return NextResponse.json({ error: (err instanceof Error ? err.message : 'Unknown error') }, { status: 500 })
   }
 }

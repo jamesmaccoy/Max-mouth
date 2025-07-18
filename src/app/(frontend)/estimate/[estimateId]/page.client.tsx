@@ -39,6 +39,43 @@ import {
 } from '@/utils/packageSuggestions'
 import { useSubscription } from '@/hooks/useSubscription'
 
+// --- Add the usePackages hook here ---
+export interface PostPackage {
+  id: string
+  name: string
+  description?: string
+  multiplier: number
+  features: { feature: string }[]
+  category: string
+  minNights: number
+  maxNights: number
+  revenueCatId?: string
+  isEnabled: boolean
+}
+
+export function usePackages(postId: string) {
+  const [packages, setPackages] = useState<PostPackage[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (!postId) return
+    setLoading(true)
+    fetch(`/api/packages?where[post][equals]=${postId}&where[isEnabled][equals]=true`)
+      .then(res => res.json())
+      .then(data => {
+        setPackages(data.docs || [])
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err)
+        setLoading(false)
+      })
+  }, [postId])
+
+  return { packages, loading, error }
+}
+
 interface RevenueCatError extends Error {
   code?: ErrorCode
 }
@@ -71,10 +108,8 @@ export default function EstimateDetailsClientPage({ data, user }: Props) {
       : 1
   const _bookingTotal = data?.total ?? 0
   const _postId = typeof data?.post === 'object' && data?.post?.id ? data.post.id : ''
+  const { packages, loading, error } = usePackages(_postId)
 
-  const [guests, setGuests] = useState<User[]>(
-    Array.isArray(data.guests) ? (data.guests.filter((g) => typeof g !== 'string') as User[]) : [],
-  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -322,77 +357,63 @@ export default function EstimateDetailsClientPage({ data, user }: Props) {
             <div className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Suggested Packages</h2>
               <div className="grid grid-cols-1 gap-4">
-                {/* Main Packages */}
-                {mainPackages.map((pkg) => (
-                  <Card 
-                    key={pkg.id}
-                    className={cn(
-                      'cursor-pointer transition-all',
-                      selectedPackage?.id === pkg.id 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50',
-                      // Show different styling for packages the user can't access
-                      pkg.entitlementRequired !== 'none' && 
-                      pkg.entitlementRequired !== customerEntitlement && 
-                      customerEntitlement !== 'pro'
-                        ? 'opacity-75'
-                        : ''
-                    )}
-                    onClick={() => {
-                      // Only allow selection if user has access
-                      if (pkg.entitlementRequired === 'none' || 
-                          pkg.entitlementRequired === customerEntitlement || 
-                          customerEntitlement === 'pro') {
-                        setSelectedPackage(pkg)
-                      }
-                    }}
-                  >
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{pkg.title}</CardTitle>
-                          <CardDescription>{pkg.description}</CardDescription>
-                          
-                          {/* Show access requirements */}
-                          {pkg.entitlementRequired !== 'none' && pkg.entitlementRequired !== customerEntitlement && (
-                            <p className="text-sm text-orange-600 mt-2">
-                              {pkg.entitlementRequired === 'standard' 
-                                ? 'Requires standard membership' 
-                                : 'Requires pro membership'}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <span className="text-lg font-bold">
-                            {pkg.multiplier === 1 
-                              ? 'Base rate' 
-                              : pkg.multiplier > 1 
-                                ? `+${((pkg.multiplier - 1) * 100).toFixed(0)}%`
-                                : `-${((1 - pkg.multiplier) * 100).toFixed(0)}%`
-                            }
-                          </span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {pkg.features.map((feature, index) => (
-                          <li key={index} className="flex items-center text-sm">
-                            <Check className="mr-2 h-4 w-4 text-primary" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    {selectedPackage?.id === pkg.id && (
-                      <CardFooter>
-                        <span className="text-2xl font-bold text-primary">
-                          {formatPrice(packagePrice)}
-                        </span>
-                      </CardFooter>
-                    )}
-                  </Card>
-                ))}
+                {loading ? (
+                  <div>Loading packages...</div>
+                ) : error ? (
+                  <div>Error loading packages.</div>
+                ) : !packages.length ? (
+                  <div>No packages available for this post.</div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {packages.map((pkg) => (
+                      <Card
+                        key={pkg.id}
+                        className={cn(
+                          'cursor-pointer transition-all',
+                          selectedPackage?.id === pkg.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        )}
+                        onClick={() => setSelectedPackage(pkg)}
+                      >
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle>{pkg.name}</CardTitle>
+                              <CardDescription>{pkg.description}</CardDescription>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-lg font-bold">
+                                {pkg.multiplier === 1
+                                  ? 'Base rate'
+                                  : pkg.multiplier > 1
+                                  ? `+${((pkg.multiplier - 1) * 100).toFixed(0)}%`
+                                  : `-${((1 - pkg.multiplier) * 100).toFixed(0)}%`}
+                              </span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2">
+                            {pkg.features.map((f, idx) => (
+                              <li key={idx} className="flex items-center text-sm">
+                                <Check className="mr-2 h-4 w-4 text-primary" />
+                                {f.feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                        {selectedPackage?.id === pkg.id && (
+                          <CardFooter>
+                            <span className="text-2xl font-bold text-primary">
+                              {formatPrice(packagePrice)}
+                            </span>
+                          </CardFooter>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
 
                 {/* Wine Package Add-on */}
                 {winePackage && (

@@ -74,6 +74,7 @@ export interface Config {
     media: Media;
     categories: Category;
     users: User;
+    packages: Package;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -92,6 +93,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    packages: PackagesSelect<false> | PackagesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -775,6 +777,31 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages".
+ */
+export interface Package {
+  id: string;
+  post: string | Post;
+  name: string;
+  description?: string | null;
+  multiplier: number;
+  features?:
+    | {
+        feature?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  category: 'standard' | 'hosted' | 'addon' | 'special';
+  minNights: number;
+  maxNights: number;
+  revenueCatId?: string | null;
+  isEnabled?: boolean | null;
+  baseRate?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -973,6 +1000,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: string | User;
+      } | null)
+    | ({
+        relationTo: 'packages';
+        value: string | Package;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1370,6 +1401,30 @@ export interface UsersSelect<T extends boolean = true> {
   hash?: T;
   loginAttempts?: T;
   lockUntil?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages_select".
+ */
+export interface PackagesSelect<T extends boolean = true> {
+  post?: T;
+  name?: T;
+  description?: T;
+  multiplier?: T;
+  features?:
+    | T
+    | {
+        feature?: T;
+        id?: T;
+      };
+  category?: T;
+  minNights?: T;
+  maxNights?: T;
+  revenueCatId?: T;
+  isEnabled?: T;
+  baseRate?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
