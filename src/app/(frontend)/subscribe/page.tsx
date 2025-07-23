@@ -176,14 +176,14 @@ export default function SubscribePage() {
         return (
           <div 
             className="mt-16 pt-16 pb-16 md:border-t border-border bg-cover bg-center relative rounded-lg shadow-md"
-            style={{ backgroundImage: `url('https://llandudnoshack.co.za/images/Gallery-shack.jpg')` }}
+            style={{ backgroundImage: `url('https://www.thanks.digital/_next/image?url=https%3A%2F%2Fwww.thanks.digital%2Fapi%2Fmedia%2Ffile%2Fsusu.gif%3F2025-04-13T11%3A15%3A26.277Z&w=1920&q=100')` }}
           >
             <div className="absolute inset-0 bg-black/30 rounded-lg"></div> 
 
             <div className="relative max-w-4xl mx-auto px-4 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12"> 
               
               <div className="text-center lg:text-left text-white">
-                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Host a plek</h2>
+                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Host a dental practice</h2>
               </div>
 
               <div className="w-full max-w-md">
@@ -204,7 +204,7 @@ export default function SubscribePage() {
                     onClick={() => handlePurchase(professional_plan)}
                     className="mt-8 block w-full rounded-md bg-secondary px-3.5 py-2.5 text-center text-sm font-semibold text-secondary-foreground shadow-sm hover:bg-secondary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                   >
-                    Host a plek
+                    Host a practice
                   </button>
                 </div>
               </div>
