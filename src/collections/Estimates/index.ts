@@ -299,6 +299,28 @@ export const Estimate: CollectionConfig = {
         update: isAdminField,
       },
     },
+    {
+      name: 'selectedPackage',
+      type: 'group',
+      fields: [
+        {
+          name: 'package',
+          type: 'relationship',
+          relationTo: 'packages',
+          required: true,
+        },
+        {
+          name: 'customName',
+          type: 'text',
+          required: false,
+        },
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          defaultValue: true,
+        },
+      ],
+    },
     ...slugField('title', {
       checkboxOverrides: {
         access: {
