@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 interface Package {
   id: string;
@@ -98,6 +98,7 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
     setSaving(true);
     setError(null);
     try {
+      console.log("Saving packageSettings:", packageSettings); // <-- Add this
       const res = await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -138,7 +139,7 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
                       <Button variant="outline" onClick={() => openEdit(pkg.id, pkg.customName)}>Edit</Button>
                     </SheetTrigger>
                     <SheetContent>
-                      <h2 className="text-lg font-semibold mb-4">Edit Package Name</h2>
+                      <SheetTitle>Edit Package Name</SheetTitle>
                       <Input value={editName} onChange={e => setEditName(e.target.value)} className="mb-4" />
                       <Button onClick={handleEditSave} className="w-full">Save</Button>
                     </SheetContent>
