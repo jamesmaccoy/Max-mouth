@@ -218,6 +218,14 @@ export interface Post {
     image?: (string | null) | Media;
     description?: string | null;
   };
+  packageSettings?:
+    | {
+        package: string | Package;
+        enabled?: boolean | null;
+        customName?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   publishedAt?: string | null;
   authors?: (string | User)[] | null;
   populatedAuthors?:
@@ -343,6 +351,31 @@ export interface Category {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages".
+ */
+export interface Package {
+  id: string;
+  post: string | Post;
+  name: string;
+  description?: string | null;
+  multiplier: number;
+  features?:
+    | {
+        feature?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  category: 'standard' | 'hosted' | 'addon' | 'special';
+  minNights: number;
+  maxNights: number;
+  revenueCatId?: string | null;
+  isEnabled?: boolean | null;
+  baseRate?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -772,31 +805,6 @@ export interface Form {
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "packages".
- */
-export interface Package {
-  id: string;
-  post: string | Post;
-  name: string;
-  description?: string | null;
-  multiplier: number;
-  features?:
-    | {
-        feature?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  category: 'standard' | 'hosted' | 'addon' | 'special';
-  minNights: number;
-  maxNights: number;
-  revenueCatId?: string | null;
-  isEnabled?: boolean | null;
-  baseRate?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1256,6 +1264,14 @@ export interface PostsSelect<T extends boolean = true> {
         title?: T;
         image?: T;
         description?: T;
+      };
+  packageSettings?:
+    | T
+    | {
+        package?: T;
+        enabled?: T;
+        customName?: T;
+        id?: T;
       };
   publishedAt?: T;
   authors?: T;

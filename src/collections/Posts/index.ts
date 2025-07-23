@@ -165,6 +165,29 @@ export const Posts: CollectionConfig<'posts'> = {
       ],
     },
     {
+      name: 'packageSettings',
+      type: 'array',
+      label: 'Package Settings',
+      fields: [
+        {
+          name: 'package',
+          type: 'relationship',
+          relationTo: 'packages',
+          required: true,
+        },
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          defaultValue: true,
+        },
+        {
+          name: 'customName',
+          type: 'text',
+          required: false,
+        },
+      ],
+    },
+    {
       name: 'publishedAt',
       type: 'date',
       admin: {

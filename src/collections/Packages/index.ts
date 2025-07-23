@@ -15,6 +15,7 @@ const Packages: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     { name: 'name', type: 'text', required: true },
+    { name: 'slug', type: 'text', required: true, unique: true },
     { name: 'description', type: 'textarea' },
     { name: 'multiplier', type: 'number', required: true, defaultValue: 1, min: 0.1, max: 3.0, admin: { step: 0.01 } },
     {
