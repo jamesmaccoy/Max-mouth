@@ -91,6 +91,24 @@ type Props = {
   user: User
 }
 
+// Helper to map PostPackage to SuggestedPackage
+function mapPostPackageToSuggested(pkg: PostPackage): SuggestedPackage {
+  return {
+    id: pkg.id,
+    name: pkg.name,
+    title: pkg.name, // or another field if you want a different display title
+    description: pkg.description || '',
+    multiplier: pkg.multiplier,
+    features: pkg.features,
+    category: pkg.category,
+    minNights: pkg.minNights,
+    maxNights: pkg.maxNights,
+    revenueCatId: pkg.revenueCatId,
+    isEnabled: pkg.isEnabled,
+    entitlementRequired: 'none', // or set appropriately
+  }
+}
+
 export default function EstimateDetailsClientPage({ data, user }: Props) {
   const router = useRouter()
   const { isInitialized } = useRevenueCat()
@@ -373,7 +391,7 @@ export default function EstimateDetailsClientPage({ data, user }: Props) {
                               ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-primary/50'
                           )}
-                          onClick={() => setSelectedPackage(pkg)}
+                          onClick={() => setSelectedPackage(mapPostPackageToSuggested(pkg))}
                         >
                           <CardHeader>
                             <div className="flex justify-between items-start">

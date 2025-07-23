@@ -158,16 +158,16 @@ export const allPackages: SuggestedPackage[] = [
   // Wine package add-on (available to all)
   {
     id: 'wine',
-    title: 'Wine Experience Add-on',
-    description: 'Wine tasting and selection platters',
+    title: 'Gum guard',
+    description: 'Smart gum guard',
     minNights: 1,
     maxNights: 365,
     multiplier: 1.5,
     features: [
-      'Wine tasting experience',
-      'Curated wine selection',
+      'Smart gum guard',
+      'Curated gum guard',
       'Sommelier consultation',
-      'Local wine knowledge',
+      'Local gum guard knowledge',
     ],
     revenueCatId: 'Bottle_wine',
     entitlementRequired: 'none',
