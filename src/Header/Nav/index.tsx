@@ -39,7 +39,7 @@ export const HeaderNav: React.FC<{ data: HeaderType }> = ({ data }) => {
           href="/manage/packages" 
           className={buttonVariants({ variant: "link" })}
         >
-          Manage Packages
+          Manage Max
         </Link>
       )}
 
