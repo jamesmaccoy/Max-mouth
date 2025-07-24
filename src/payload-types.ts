@@ -362,7 +362,6 @@ export interface Package {
   id: string;
   post: string | Post;
   name: string;
-  slug: string;
   description?: string | null;
   multiplier: number;
   features?:
@@ -391,11 +390,6 @@ export interface Estimate {
   token?: string | null;
   guests?: (string | User)[] | null;
   total: number;
-  selectedPackage: {
-    package: string | Package;
-    customName?: string | null;
-    enabled?: boolean | null;
-  };
   slug?: string | null;
   slugLock?: boolean | null;
   post: string | Post;
@@ -1109,13 +1103,6 @@ export interface EstimatesSelect<T extends boolean = true> {
   token?: T;
   guests?: T;
   total?: T;
-  selectedPackage?:
-    | T
-    | {
-        package?: T;
-        customName?: T;
-        enabled?: T;
-      };
   slug?: T;
   slugLock?: T;
   post?: T;
@@ -1438,7 +1425,6 @@ export interface UsersSelect<T extends boolean = true> {
 export interface PackagesSelect<T extends boolean = true> {
   post?: T;
   name?: T;
-  slug?: T;
   description?: T;
   multiplier?: T;
   features?:
