@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getMeUser } from '@/utilities/getMeUser'
-import PackageDashboard from './PackageDashboard'
+import PackageDashboard from './page.client'
 
 export default async function PackageManagePage() {
   const meUser = await getMeUser()

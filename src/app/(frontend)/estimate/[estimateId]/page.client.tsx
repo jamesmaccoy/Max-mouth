@@ -61,7 +61,7 @@ export function usePackages(postId: string) {
   useEffect(() => {
     if (!postId) return
     setLoading(true)
-    fetch(`/api/packages?where[post][equals]=${postId}`)
+    fetch(`/api/packages?where[post][equals]=${postId}&where[isEnabled][equals]=true`)
       .then(res => res.json())
       .then(data => {
         setPackages(data.docs || [])
@@ -362,55 +362,53 @@ export default function EstimateDetailsClientPage({ data, user }: Props) {
                   <div>No packages available for this post.</div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
-                    {packages
-                      .filter(pkg => _bookingDuration >= pkg.minNights && _bookingDuration <= pkg.maxNights)
-                      .map((pkg) => (
-                        <Card
-                          key={pkg.id}
-                          className={cn(
-                            'cursor-pointer transition-all',
-                            selectedPackage?.id === pkg.id
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          )}
-                          onClick={() => setSelectedPackage(pkg)}
-                        >
-                          <CardHeader>
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle>{pkg.name}</CardTitle>
-                                <CardDescription>{pkg.description}</CardDescription>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-lg font-bold">
-                                  {pkg.multiplier === 1
-                                    ? 'Base rate'
-                                    : pkg.multiplier > 1
-                                    ? `+${((pkg.multiplier - 1) * 100).toFixed(0)}%`
-                                    : `-${((1 - pkg.multiplier) * 100).toFixed(0)}%`}
-                                </span>
-                              </div>
+                    {packages.map((pkg) => (
+                      <Card
+                        key={pkg.id}
+                        className={cn(
+                          'cursor-pointer transition-all',
+                          selectedPackage?.id === pkg.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        )}
+                        onClick={() => setSelectedPackage(pkg)}
+                      >
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle>{pkg.name}</CardTitle>
+                              <CardDescription>{pkg.description}</CardDescription>
                             </div>
-                          </CardHeader>
-                          <CardContent>
-                            <ul className="space-y-2">
-                              {pkg.features.map((f, idx) => (
-                                <li key={idx} className="flex items-center text-sm">
-                                  <Check className="mr-2 h-4 w-4 text-primary" />
-                                  {f.feature}
-                                </li>
-                              ))}
-                            </ul>
-                          </CardContent>
-                          {selectedPackage?.id === pkg.id && (
-                            <CardFooter>
-                              <span className="text-2xl font-bold text-primary">
-                                {formatPrice(packagePrice)}
+                            <div className="text-right">
+                              <span className="text-lg font-bold">
+                                {pkg.multiplier === 1
+                                  ? 'Base rate'
+                                  : pkg.multiplier > 1
+                                  ? `+${((pkg.multiplier - 1) * 100).toFixed(0)}%`
+                                  : `-${((1 - pkg.multiplier) * 100).toFixed(0)}%`}
                               </span>
-                            </CardFooter>
-                          )}
-                        </Card>
-                      ))}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2">
+                            {pkg.features.map((f, idx) => (
+                              <li key={idx} className="flex items-center text-sm">
+                                <Check className="mr-2 h-4 w-4 text-primary" />
+                                {f.feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                        {selectedPackage?.id === pkg.id && (
+                          <CardFooter>
+                            <span className="text-2xl font-bold text-primary">
+                              {formatPrice(packagePrice)}
+                            </span>
+                          </CardFooter>
+                        )}
+                      </Card>
+                    ))}
                   </div>
                 )}
 
