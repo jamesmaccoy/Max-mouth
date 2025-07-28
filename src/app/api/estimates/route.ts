@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     })
 
     let estimate: Estimate
-    if (existing.docs.length && existing.docs[0]) {
+    if (existing.docs.length) {
       // Update
       estimate = await payload.update({
         collection: 'estimates',

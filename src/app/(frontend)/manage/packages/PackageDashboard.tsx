@@ -68,6 +68,7 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
     setSaving(true);
     setError(null);
     try {
+      // PATCH the post with updated package settings
       const res = await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

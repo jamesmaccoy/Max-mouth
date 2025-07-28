@@ -17,32 +17,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       )
     }
 
-    if (req.method === 'PATCH') {
-      const body = await req.json();
-      // Deduplicate and ensure only package IDs are saved
-      let packageSettings = Array.isArray(body.packageSettings) ? body.packageSettings : [];
-      const deduped: Record<string, any> = {};
-      for (const setting of packageSettings) {
-        const pkgId = typeof setting.package === 'object' ? setting.package.id : setting.package;
-        deduped[pkgId] = {
-          ...setting,
-          package: pkgId,
-        };
-      }
-      const cleanData = { ...body };
-      delete cleanData.packageSettings;
-      const updated = await payload.update({
-        collection: 'posts',
-        id,
-        data: {
-          ...cleanData,
-          packageSettings: Object.values(deduped),
-        },
-        user,
-      });
-      return NextResponse.json({ message: 'Post updated successfully', doc: updated });
-    }
-
     let body: any
     const contentType = req.headers.get('content-type') || ''
     
