@@ -254,7 +254,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const post = await payload.update({
       collection: 'posts',
       id,
-      data: cleanData,
+      data: {
+        ...cleanData,
+        packageSettings: body.packageSettings,
+      },
       user,
     })
 
