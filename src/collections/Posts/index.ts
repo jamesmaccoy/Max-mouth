@@ -227,6 +227,34 @@ export const Posts: CollectionConfig<'posts'> = {
         position: 'sidebar',
       },
     },
+    {
+      name: 'packageSettings',
+      type: 'array',
+      label: 'Package Settings',
+      admin: {
+        position: 'sidebar',
+        description: 'Custom settings for packages associated with this post',
+      },
+      fields: [
+        {
+          name: 'package',
+          type: 'relationship',
+          relationTo: 'packages',
+          required: true,
+        },
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          defaultValue: true,
+          label: 'Enabled',
+        },
+        {
+          name: 'customName',
+          type: 'text',
+          label: 'Custom Name',
+        },
+      ],
+    },
     ...slugField(),
   ],
   hooks: {

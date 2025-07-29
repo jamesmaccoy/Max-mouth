@@ -227,6 +227,17 @@ export interface Post {
       }[]
     | null;
   baseRate?: number | null;
+  /**
+   * Custom settings for packages associated with this post
+   */
+  packageSettings?:
+    | {
+        package: string | Package;
+        enabled?: boolean | null;
+        customName?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   slug?: string | null;
   slugLock?: boolean | null;
   updatedAt: string;
@@ -348,6 +359,31 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages".
+ */
+export interface Package {
+  id: string;
+  post: string | Post;
+  name: string;
+  description?: string | null;
+  multiplier: number;
+  features?:
+    | {
+        feature?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  category: 'standard' | 'hosted' | 'addon' | 'special';
+  minNights: number;
+  maxNights: number;
+  revenueCatId?: string | null;
+  isEnabled?: boolean | null;
+  baseRate?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "estimates".
  */
 export interface Estimate {
@@ -369,31 +405,6 @@ export interface Estimate {
   fromDate: string;
   toDate: string;
   packageType?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "packages".
- */
-export interface Package {
-  id: string;
-  post: string | Post;
-  name: string;
-  description?: string | null;
-  multiplier: number;
-  features?:
-    | {
-        feature?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  category: 'standard' | 'hosted' | 'addon' | 'special';
-  minNights: number;
-  maxNights: number;
-  revenueCatId?: string | null;
-  isEnabled?: boolean | null;
-  baseRate?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1278,6 +1289,14 @@ export interface PostsSelect<T extends boolean = true> {
         name?: T;
       };
   baseRate?: T;
+  packageSettings?:
+    | T
+    | {
+        package?: T;
+        enabled?: T;
+        customName?: T;
+        id?: T;
+      };
   slug?: T;
   slugLock?: T;
   updatedAt?: T;

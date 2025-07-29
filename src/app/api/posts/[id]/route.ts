@@ -31,6 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
       const cleanData = { ...body };
       delete cleanData.packageSettings;
+      console.log('Saving package settings:', Object.values(deduped));
       const updated = await payload.update({
         collection: 'posts',
         id,
@@ -39,7 +40,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           packageSettings: Object.values(deduped),
         },
         user,
+        depth: 1, // Ensure relationships are populated
       });
+      console.log('Updated post with package settings:', updated.packageSettings);
       return NextResponse.json({ message: 'Post updated successfully', doc: updated });
     }
 

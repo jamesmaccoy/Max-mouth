@@ -25,23 +25,41 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!postId) return;
     setLoading(true);
-    fetch(`/api/packages?where[post][equals]=${postId}`)
-      .then(res => res.json())
-      .then(data => {
+    
+    // Load both packages and post data
+    Promise.all([
+      fetch(`/api/packages?where[post][equals]=${postId}`).then(res => res.json()),
+      fetch(`/api/posts/${postId}`).then(res => res.json())
+    ])
+      .then(([packagesData, postData]) => {
+        const packages = packagesData.docs || [];
+        const packageSettings = postData.doc?.packageSettings || [];
+        
+        // Create a map of package settings by package ID
+        const settingsMap = new Map();
+        packageSettings.forEach((setting: any) => {
+          const pkgId = typeof setting.package === 'object' ? setting.package.id : setting.package;
+          settingsMap.set(pkgId, setting);
+        });
+        
         setPackages(
-          (data.docs || []).map((pkg: any) => ({
-            id: pkg.id,
-            name: pkg.name,
-            description: pkg.description,
-            isEnabled: pkg.isEnabled ?? true,
-            customName: pkg.customName || pkg.name,
-            minNights: pkg.minNights,
-            maxNights: pkg.maxNights,
-          }))
+          packages.map((pkg: any) => {
+            const settings = settingsMap.get(pkg.id);
+            return {
+              id: pkg.id,
+              name: pkg.name,
+              description: pkg.description,
+              isEnabled: settings?.enabled ?? pkg.isEnabled ?? true,
+              customName: settings?.customName || pkg.name,
+              minNights: pkg.minNights,
+              maxNights: pkg.maxNights,
+            };
+          })
         );
         setLoading(false);
       })
@@ -67,6 +85,7 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
+    setSuccess(null);
     try {
       const res = await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
@@ -80,6 +99,7 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
+      setSuccess("Package settings saved successfully!");
     } catch (e: any) {
       setError(e.message || "Failed to save");
     } finally {
@@ -93,6 +113,7 @@ export default function PackageDashboard({ postId }: PackageDashboardProps) {
     <div className="container py-10 max-w-2xl">
       <h1 className="text-3xl font-bold mb-6">Manage Packages</h1>
       {error && <div className="text-red-500 mb-4">{error}</div>}
+      {success && <div className="text-green-500 mb-4">{success}</div>}
       <div className="space-y-6">
         {packages.map(pkg => (
           <Card key={pkg.id}>
