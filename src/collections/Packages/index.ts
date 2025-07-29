@@ -1,7 +1,15 @@
 import type { CollectionConfig } from 'payload'
+import { authenticated } from '../../access/authenticated'
+import { adminOrSelf } from '../../access/adminOrSelf'
 
 const Packages: CollectionConfig = {
   slug: 'packages',
+  access: {
+    create: authenticated,
+    read: authenticated,
+    update: authenticated,
+    delete: authenticated,
+  },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'post', 'category', 'isEnabled'],

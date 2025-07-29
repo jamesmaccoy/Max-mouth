@@ -63,4 +63,75 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const payload = await getPayload({ config: configPromise })
+    
+    // Try to get the user from the request
+    let user = null
+    try {
+      const authResult = await payload.auth({ headers: request.headers })
+      user = authResult.user
+    } catch (authError) {
+      console.log('Authentication failed, trying admin context:', authError)
+      // If authentication fails, this might be an admin request
+    }
+    
+    const { searchParams } = new URL(request.url)
+    const ids = searchParams.getAll('where[id][in][]')
+    
+    console.log('DELETE request for packages:', { ids, user: user?.id || 'admin' })
+    
+    if (!ids || ids.length === 0) {
+      return NextResponse.json(
+        { error: 'No package IDs provided' },
+        { status: 400 }
+      )
+    }
+    
+    // Delete packages one by one
+    const deletedPackages = []
+    const failedPackages = []
+    
+    for (const id of ids) {
+      try {
+        console.log(`Attempting to delete package: ${id}`)
+        
+        // For admin requests, we might not have a user object
+        const deleteOptions: any = {
+          collection: 'packages',
+          id,
+        }
+        
+        if (user) {
+          deleteOptions.user = user
+        }
+        
+        const deletedPackage = await payload.delete(deleteOptions)
+        deletedPackages.push(deletedPackage)
+        console.log(`Successfully deleted package: ${id}`)
+      } catch (error) {
+        console.error(`Error deleting package ${id}:`, error)
+        failedPackages.push({ id, error: error instanceof Error ? error.message : 'Unknown error' })
+        // Continue with other deletions even if one fails
+      }
+    }
+    
+    const response = {
+      message: `Successfully deleted ${deletedPackages.length} packages${failedPackages.length > 0 ? `, ${failedPackages.length} failed` : ''}`,
+      deletedPackages,
+      failedPackages: failedPackages.length > 0 ? failedPackages : undefined,
+    }
+    
+    console.log('DELETE response:', response)
+    return NextResponse.json(response)
+  } catch (error) {
+    console.error('Error deleting packages:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete packages', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
 } 
