@@ -435,11 +435,11 @@ export const BASE_PACKAGE_TEMPLATES: BasePackageConfig[] = [
     canBeDisabled: true
   },
   {
-    id: 'extended_hosted',
+    id: 'week_x2_hosted',
     category: 'hosted',
     durationTier: 'extended',
-    minNights: 8,
-    maxNights: 365,
+    minNights: 7,
+    maxNights: 14,
     baseMultiplier: 1.2,
     features: [
       {
@@ -467,7 +467,7 @@ export const BASE_PACKAGE_TEMPLATES: BasePackageConfig[] = [
         category: 'special'
       }
     ],
-    revenueCatId: 'hosted_extended',
+    revenueCatId: 'week_x2_customer',
     customerTierRequired: 'pro',
     canBeRenamed: true,
     canBeDisabled: true

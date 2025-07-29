@@ -137,11 +137,11 @@ export const allPackages: SuggestedPackage[] = [
     isPrimary: true,
   },
   {
-    id: 'week_x2_hosted',
+    id: 'hosted_extended',
     title: 'Hosted Extended Stay',
     description: 'Premium long-term hosted experience',
-    minNights: 7,
-    maxNights: 14,
+    minNights: 8,
+    maxNights: 365,
     multiplier: 1.2,
     features: [
       'Premium accommodation',
@@ -150,7 +150,7 @@ export const allPackages: SuggestedPackage[] = [
       'Priority service',
       'Bi-weekly host meetings',
     ],
-    revenueCatId: 'week_x2_customer',
+    revenueCatId: 'hosted_extended',
     entitlementRequired: 'pro',
     isPrimary: true,
   },

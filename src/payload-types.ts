@@ -357,6 +357,11 @@ export interface Estimate {
   token?: string | null;
   guests?: (string | User)[] | null;
   total: number;
+  selectedPackage: {
+    package: string | Package;
+    customName?: string | null;
+    enabled?: boolean | null;
+  };
   slug?: string | null;
   slugLock?: boolean | null;
   post: string | Post;
@@ -364,6 +369,31 @@ export interface Estimate {
   fromDate: string;
   toDate: string;
   packageType?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "packages".
+ */
+export interface Package {
+  id: string;
+  post: string | Post;
+  name: string;
+  description?: string | null;
+  multiplier: number;
+  features?:
+    | {
+        feature?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  category: 'standard' | 'hosted' | 'addon' | 'special';
+  minNights: number;
+  maxNights: number;
+  revenueCatId?: string | null;
+  isEnabled?: boolean | null;
+  baseRate?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -777,31 +807,6 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "packages".
- */
-export interface Package {
-  id: string;
-  post: string | Post;
-  name: string;
-  description?: string | null;
-  multiplier: number;
-  features?:
-    | {
-        feature?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  category: 'standard' | 'hosted' | 'addon' | 'special';
-  minNights: number;
-  maxNights: number;
-  revenueCatId?: string | null;
-  isEnabled?: boolean | null;
-  baseRate?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1095,6 +1100,13 @@ export interface EstimatesSelect<T extends boolean = true> {
   token?: T;
   guests?: T;
   total?: T;
+  selectedPackage?:
+    | T
+    | {
+        package?: T;
+        customName?: T;
+        enabled?: T;
+      };
   slug?: T;
   slugLock?: T;
   post?: T;
