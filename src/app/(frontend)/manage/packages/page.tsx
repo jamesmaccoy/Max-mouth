@@ -4,18 +4,15 @@ import { redirect } from 'next/navigation'
 
 export default async function PackageManagePage() {
   const meUser = await getMeUser()
-
-  // Check if user is authenticated and has host role
   if (!meUser?.user) {
-    redirect('/login?redirect=/manage/packages')
+    redirect('/login')
   }
-
-  if (!(meUser.user as any).role?.includes('host') && !(meUser.user as any).role?.includes('admin')) {
+  if (!meUser.user.role?.includes('admin') && !meUser.user.role?.includes('host')) {
     redirect('/')
   }
 
   // Use absolute URL for server-side fetch
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
   const res = await fetch(`${baseUrl}/api/posts?limit=100`, {
     cache: 'no-store',
   })
