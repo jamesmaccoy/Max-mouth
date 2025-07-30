@@ -14,14 +14,20 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { calculateTotal } from '@/lib/calculateTotal'
 import { hasUnavailableDateBetween } from '@/utilities/hasUnavailableDateBetween'
 
-// Import new package suggestion system
-import {
-  getSuggestedPackages,
-  getPrimaryPackageRecommendation,
-  getCustomerEntitlement,
-  type SuggestedPackage,
-  type CustomerEntitlement,
-} from '@/utils/packageSuggestions'
+interface Package {
+  id: string
+  name: string
+  description: string
+  multiplier: number
+  category: string
+  minNights: number
+  maxNights: number
+  revenueCatId?: string
+  baseRate?: number
+  isEnabled: boolean
+  features: string[]
+  source: 'database' | 'revenuecat'
+}
 
 export type EstimateBlockProps = EstimateBlockType & {
   className?: string
@@ -46,6 +52,12 @@ function fetchUnavailableDates(postId: string): Promise<string[]> {
     .then((data) => data.unavailableDates || [])
 }
 
+function fetchPackages(postId: string): Promise<Package[]> {
+  return fetch(`/api/packages/post/${postId}`)
+    .then((res) => res.json())
+    .then((data) => data.packages || [])
+}
+
 export const EstimateBlock: React.FC<EstimateBlockProps> = ({
   className,
   baseRate = 150,
@@ -58,11 +70,9 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
   const [endDate, setEndDate] = useState<Date | null>(null)
   const [selectedDuration, setSelectedDuration] = useState(1)
   const [unavailableDates, setUnavailableDates] = useState<string[]>([])
-
-  // Package suggestion states
-  const [suggestedPackages, setSuggestedPackages] = useState<SuggestedPackage[]>([])
-  const [selectedPackage, setSelectedPackage] = useState<SuggestedPackage | null>(null)
-  const [customerEntitlement, setCustomerEntitlement] = useState<CustomerEntitlement>('none')
+  const [packages, setPackages] = useState<Package[]>([])
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const { currentUser } = useUserContext()
   const subscriptionStatus = useSubscription()
@@ -75,23 +85,24 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
     : calculateTotal(effectiveBaseRate, selectedDuration, 1)
   const baseTotal = calculateTotal(effectiveBaseRate, selectedDuration, 1)
 
-  // Update customer entitlement when subscription status changes
+  // Fetch packages and unavailable dates
   useEffect(() => {
-    const entitlement = getCustomerEntitlement(subscriptionStatus)
-    setCustomerEntitlement(entitlement)
-  }, [subscriptionStatus])
-
-  // Update suggested packages when duration or entitlement changes
-  useEffect(() => {
-    if (selectedDuration > 0) {
-      const suggestions = getSuggestedPackages(selectedDuration, customerEntitlement, true)
-      setSuggestedPackages(suggestions)
-
-      // Auto-select the primary recommendation
-      const primaryRecommendation = getPrimaryPackageRecommendation(selectedDuration, customerEntitlement)
-      setSelectedPackage(primaryRecommendation)
+    const loadData = async () => {
+      try {
+        const [packagesData, unavailableDatesData] = await Promise.all([
+          fetchPackages(postId),
+          fetchUnavailableDates(postId)
+        ])
+        setPackages(packagesData)
+        setUnavailableDates(unavailableDatesData)
+      } catch (error) {
+        console.error('Error loading data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [selectedDuration, customerEntitlement])
+    loadData()
+  }, [postId])
 
   // Calculate duration when dates change
   useEffect(() => {
@@ -108,23 +119,54 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
     }
   }, [startDate, endDate])
 
-  // Fetch unavailable dates
+  // Auto-select appropriate package when duration changes
   useEffect(() => {
-    fetchUnavailableDates(postId).then((dates) => setUnavailableDates(dates))
-  }, [postId])
+    if (selectedDuration > 0 && packages.length > 0) {
+      // Find the best package for this duration
+      const suitablePackages = packages.filter(pkg => 
+        pkg.isEnabled && 
+        selectedDuration >= pkg.minNights && 
+        selectedDuration <= pkg.maxNights
+      )
+      
+      if (suitablePackages.length > 0) {
+        // Prefer RevenueCat packages, then database packages
+        const revenueCatPackage = suitablePackages.find(pkg => pkg.source === 'revenuecat')
+        const databasePackage = suitablePackages.find(pkg => pkg.source === 'database')
+        
+        setSelectedPackage(revenueCatPackage || databasePackage || suitablePackages[0])
+      } else {
+        setSelectedPackage(null)
+      }
+    }
+  }, [selectedDuration, packages])
 
   if (blockType !== 'stayDuration') {
     return null
   }
 
-  // Filter packages to show only the most relevant suggestions
-  const packagesToShow = suggestedPackages.filter((pkg) => {
-    // Always show wine addon
-    if (pkg.id === 'wine') return true
-    
-    // Show packages that match customer entitlement or are available to all
-    return pkg.entitlementRequired === customerEntitlement || pkg.entitlementRequired === 'none'
-  })
+  if (loading) {
+    return (
+      <div className={cn(
+        'flex flex-col space-y-4 p-6 bg-card rounded-lg border border-border',
+        className,
+      )}>
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="h-10 bg-gray-200 rounded mb-2"></div>
+          <div className="h-10 bg-gray-200 rounded mb-4"></div>
+          <div className="h-20 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Filter packages to show only suitable ones for the selected duration
+  const suitablePackages = packages.filter(pkg => 
+    pkg.isEnabled && 
+    selectedDuration >= pkg.minNights && 
+    selectedDuration <= pkg.maxNights
+  )
 
   return (
     <div
@@ -195,12 +237,12 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
         </div>
       </div>
 
-      {/* Suggested Packages */}
-      {packagesToShow.length > 0 && (
+      {/* Available Packages */}
+      {suitablePackages.length > 0 && (
         <div className="space-y-3">
-          <label className="text-sm font-medium">Suggested for you</label>
+          <label className="text-sm font-medium">Available Packages</label>
           <div className="space-y-2">
-            {packagesToShow.map((pkg) => (
+            {suitablePackages.map((pkg) => (
               <div
                 key={pkg.id}
                 className={cn(
@@ -208,32 +250,29 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
                   selectedPackage?.id === pkg.id
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50',
-                  // Show different styling for packages the user can't access
-                  pkg.entitlementRequired !== 'none' && 
-                  pkg.entitlementRequired !== customerEntitlement && 
-                  customerEntitlement !== 'pro'
-                    ? 'opacity-60'
-                    : ''
                 )}
-                onClick={() => {
-                  // Only allow selection if user has access or it's a preview
-                  if (pkg.entitlementRequired === 'none' || 
-                      pkg.entitlementRequired === customerEntitlement || 
-                      customerEntitlement === 'pro') {
-                    setSelectedPackage(pkg)
-                  }
-                }}
+                onClick={() => setSelectedPackage(pkg)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h4 className="font-medium text-sm">{pkg.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-sm">{pkg.name}</h4>
+                      {pkg.source === 'revenuecat' && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          RevenueCat
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">{pkg.description}</p>
-                    
-                    {/* Show access requirements */}
-                    {pkg.entitlementRequired !== 'none' && pkg.entitlementRequired !== customerEntitlement && (
-                      <p className="text-xs text-orange-600 mt-1">
-                        {pkg.entitlementRequired === 'standard' ? 'Requires standard membership' : 'Requires pro membership'}
-                      </p>
+                    {pkg.features.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-600">Features:</p>
+                        <ul className="text-xs text-gray-500 mt-1 space-y-1">
+                          {pkg.features.slice(0, 3).map((feature, index) => (
+                            <li key={index}>• {feature}</li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
                   <div className="text-right">
@@ -245,6 +284,11 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
                           : `-${((1 - pkg.multiplier) * 100).toFixed(0)}%`
                       }
                     </span>
+                    {pkg.baseRate && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        ${pkg.baseRate}/night
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -258,7 +302,7 @@ export const EstimateBlock: React.FC<EstimateBlockProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Selected Package:</span>
-            <span className="font-medium">{selectedPackage.title}</span>
+            <span className="font-medium">{selectedPackage.name}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Base Rate:</span>
