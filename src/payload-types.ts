@@ -172,8 +172,32 @@ export interface Booking {
  */
 export interface User {
   id: string;
-  name?: string | null;
-  role?: ('admin' | 'host' | 'customer')[] | null;
+  name: string;
+  role: 'guest' | 'customer' | 'host' | 'admin';
+  subscriptionStatus?: {
+    status?: ('none' | 'trial' | 'active' | 'past_due' | 'canceled') | null;
+    plan?: ('free' | 'basic' | 'pro' | 'enterprise') | null;
+    expiresAt?: string | null;
+    revenueCatCustomerId?: string | null;
+  };
+  paymentValidation?: {
+    lastPaymentDate?: string | null;
+    paymentMethod?: ('none' | 'credit_card' | 'paypal' | 'apple_pay') | null;
+    paymentStatus?: ('pending' | 'completed' | 'failed' | 'refunded') | null;
+  };
+  hostProfile?: {
+    isVerified?: boolean | null;
+    verificationDate?: string | null;
+    hostRating?: number | null;
+    totalBookings?: number | null;
+    bio?: string | null;
+    specialties?:
+      | {
+          specialty?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1423,6 +1447,36 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  subscriptionStatus?:
+    | T
+    | {
+        status?: T;
+        plan?: T;
+        expiresAt?: T;
+        revenueCatCustomerId?: T;
+      };
+  paymentValidation?:
+    | T
+    | {
+        lastPaymentDate?: T;
+        paymentMethod?: T;
+        paymentStatus?: T;
+      };
+  hostProfile?:
+    | T
+    | {
+        isVerified?: T;
+        verificationDate?: T;
+        hostRating?: T;
+        totalBookings?: T;
+        bio?: T;
+        specialties?:
+          | T
+          | {
+              specialty?: T;
+              id?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;

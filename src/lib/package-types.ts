@@ -472,6 +472,7 @@ export const BASE_PACKAGE_TEMPLATES: BasePackageConfig[] = [
     canBeRenamed: true,
     canBeDisabled: true
   },
+  
 
   // Add-on packages
   {
