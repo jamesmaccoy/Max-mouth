@@ -12,7 +12,6 @@ export default async function PackageManagePage() {
   }
 
   // Use absolute URL for server-side fetch
-<<<<<<< HEAD
   const baseUrl =
     process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, '') ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://max-mouth.vercel.app')
@@ -27,14 +26,7 @@ export default async function PackageManagePage() {
     console.error('Error fetching posts:', err)
     // Optionally, render an error message in your component
   }
-=======
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://max-mouth.vercel.app'
-  const res = await fetch(`${baseUrl}/api/posts?limit=100`, {
-    cache: 'no-store',
-  })
-  const data = await res.json()
-  const posts = data.docs || []
->>>>>>> dce3e9d2fde426f2263513a136877dde2fa439e6
+
 
   return (
     <div className="container py-10">
